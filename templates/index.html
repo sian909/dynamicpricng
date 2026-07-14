@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Pricing Simulator</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: #1e1b4b;
+            margin: 0 0 10px 0;
+        }
+
+        header p {
+            color: var(--text-sub);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .user-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .user-card.closed {
+            opacity: 0.75;
+            background-color: #f1f5f9;
+        }
+
+        .badge-closed {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #10b981;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            display: none;
+        }
+
+        .user-card.closed .badge-closed {
+            display: inline-block;
+        }
+
+        .user-segment {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            margin: 4px 0 8px 0;
+            color: #1e293b;
+        }
+
+        .user-profile {
+            font-size: 0.875rem;
+            color: var(--text-sub);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            background-color: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .price-section {
+            background-color: #eef2ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            color: #4f46e5;
+            font-weight: bold;
+        }
+
+        .price-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1e1b4b;
+            margin: 5px 0;
+        }
+
+        .base-price {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-decoration: line-through;
+        }
+
+        .param-group {
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            color: var(--text-sub);
+        }
+
+        .param-slider {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        .product-select-group {
+            margin-bottom: 20px;
+        }
+        
+        .product-select-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .product-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: white;
+            font-size: 0.875rem;
+            color: var(--text-main);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .btn-action {
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn-action:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .btn-coupon {
+            grid-column: span 2;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .btn-coupon:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-purchase {
+            grid-column: span 2;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        .btn-purchase:hover {
+            background-color: #059669;
+        }
+
+        .coupon-box {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .system-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px 24px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-system {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn-reset {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-export {
+            background-color: #64748b;
+            color: white;
+            margin-left: 10px;
+            text-decoration: none;
+            display: inline-block;
+            line-height: 1.2;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        .btn-system:hover, .btn-export:hover {
+            opacity: 0.9;
+        }
+
+        .log-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .log-section h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.25rem;
+            color: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 350px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-sub);
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .delta-plus {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .delta-minus {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dynamic Pricing 실시간 가격 시뮬레이터</h1>
+            <p>가로 삼분할(3 columns) 구조 및 AI 개인화 쿠폰 지급 알고리즘 데모</p>
+        </header>
+
+        <div class="user-grid">
+            {% for user in users %}
+            <div class="user-card" id="card-{{ user.id }}">
+                <span class="badge-closed">구매 완료됨</span>
+                <div>
+                    <span class="user-segment">{{ user.segment }}</span>
+                    <h3 class="user-name">{{ user.name }}</h3>
+                    <div class="user-profile">{{ user.profile }}</div>
+
+                    <div class="product-select-group">
+                        <label>선택한 상품</label>
+                        <select class="product-select" id="prod-select-{{ user.id }}" onchange="changeProduct('{{ user.id }}')">
+                            {% for p in products %}
+                            <option value="{{ p.id }}" data-baseprice="{{ p.base_price }}">{{ p.brand }} - {{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="price-section">
+                        <span class="price-label">현재 가격 (동적 변경)</span>
+                        <div class="price-value" id="price-{{ user.id }}">0원</div>
+                        <div class="base-price" id="baseprice-{{ user.id }}">기준가: 0원</div>
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-row">
+                            <span>가격 민감도 (Sensitivity)</span>
+                            <span id="lbl-sens-{{ user.id }}">{{ user.sensitivity }}%</span>
+                        </div>
+                        <input type="range" class="param-slider" id="sens-{{ user.id }}" min="0" max="100" value="{{ user.sensitivity }}" oninput="updateParamLabel('{{ user.id }}', 'sens')">
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-row">
+                            <span>긴급도 (Urgency)</span>
+                            <span id="lbl-urg-{{ user.id }}">{{ user.urgency }}%</span>
+                        </div>
+                        <input type="range" class="param-slider" id="urg-{{ user.id }}" min="0" max="100" value="{{ user.urgency }}" oninput="updateParamLabel('{{ user.id }}', 'urg')">
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-row">
+                            <span>구매 의도 (Purchase Intent)</span>
+                            <span id="lbl-intent-{{ user.id }}">50%</span>
+                        </div>
+                        <input type="range" class="param-slider" id="intent-{{ user.id }}" min="0" max="100" value="50" oninput="updateParamLabel('{{ user.id }}', 'intent')">
+                    </div>
+
+                    <div class="param-group">
+                        <div class="param-row">
+                            <span>체류 시간 (Dwell Sec)</span>
+                            <span id="lbl-dwell-{{ user.id }}">0초</span>
+                        </div>
+                        <input type="range" class="param-slider" id="dwell-{{ user.id }}" min="0" max="30" value="0" oninput="updateParamLabel('{{ user.id }}', 'dwell')">
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin: 10px 0 6px 0; font-size:0.8rem; color: #475569;">고객 행동 시뮬레이션</h4>
+                    <div class="action-grid">
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'view_review')">후기 조회 (+300)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'deep_review')">상세 후기 (+550)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'check_shipping')">도착일 확인 (+850+긴급도)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'check_stock')">재고 확인 (+450)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'favorite')">찜하기 (+350)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'dwell_15')">15초 체류 (+420+의도)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'add_cart')">장바구니 담기 (+1400+충성도)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'sort_low')">최저가 정렬 (-850)</button>
+                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'compare_brand')">타 브랜드 비교 (-700-민감도)</button>
+                        
+                        <button class="btn-action btn-coupon" onclick="sendEvent('{{ user.id }}', 'coupon')">🎁 개인화 쿠폰 지급 & 적용</button>
+                        <button class="btn-action btn-purchase" onclick="sendEvent('{{ user.id }}', 'purchase_complete')">💳 최종 구매 완료</button>
+                    </div>
+
+                    <div class="coupon-box" id="coupon-box-{{ user.id }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="system-controls">
+            <div>
+                <strong style="color: #1e293b;">시스템 관리 도구</strong>
+                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #64748b;">DB를 완전히 비우거나 시뮬레이션 데이터를 다운로드할 수 있습니다.</p>
+            </div>
+            <div>
+                <button class="btn-system btn-reset" onclick="resetSimulator()">시뮬레이터 DB 리셋</button>
+                <a href="/api/export.csv" class="btn-export">CSV 다운로드</a>
+                <a href="/api/export.json" class="btn-export" style="background-color: #3b82f6;">JSON 다운로드</a>
+            </div>
+        </div>
+
+        <div class="log-section">
+            <h2>실시간 이벤트 추적 로그 <span id="log-count" style="font-size: 0.85rem; font-weight: normal; background: #e2e8f0; padding: 2px 8px; border-radius: 99px;">0개 기록됨</span></h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>시간</th>
+                            <th>사용자 (세그먼트)</th>
+                            <th>상품 정보</th>
+                            <th>행동 (Action)</th>
+                            <th>동적 판정 사유 (Dynamic Reasoning)</th>
+                            <th>기존 가격</th>
+                            <th>변동 가격</th>
+                            <th>적용된 가격</th>
+                            <th>신뢰도</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-tbody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentPrices = {};
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const userIds = ['parent', 'smart', 'loyal'];
+            userIds.forEach(id => {
+                changeProduct(id);
+            });
+            refreshLogs();
+        });
+
+        function updateParamLabel(userId, type) {
+            const val = document.getElementById(`${type}-${userId}`).value;
+            const label = document.getElementById(`lbl-${type}-${userId}`);
+            if (type === 'dwell') {
+                label.innerText = val + '초';
+            } else {
+                label.innerText = val + '%';
+            }
+        }
+
+        function changeProduct(userId) {
+            const select = document.getElementById(`prod-select-${userId}`);
+            const selectedOpt = select.options[select.selectedIndex];
+            const basePrice = parseInt(selectedOpt.getAttribute('data-baseprice'));
+            
+            currentPrices[userId] = basePrice;
+            
+            document.getElementById(`price-${userId}`).innerText = basePrice.toLocaleString() + '원';
+            document.getElementById(`baseprice-${userId}`).innerText = '기준가: ' + basePrice.toLocaleString() + '원';
+            
+            const couponBox = document.getElementById(`coupon-box-${userId}`);
+            couponBox.style.display = 'none';
+        }
+
+        function sendEvent(userId, action) {
+            const select = document.getElementById(`prod-select-${userId}`);
+            const productId = select.value;
+            
+            const oldPrice = currentPrices[userId];
+            const dwellSeconds = parseInt(document.getElementById(`dwell-${userId}`).value);
+            const purchaseIntent = parseInt(document.getElementById(`intent-${userId}`).value);
+            const priceSensitivity = parseInt(document.getElementById(`sens-${userId}`).value);
+            const urgency = parseInt(document.getElementById(`urg-${userId}`).value);
+
+            fetch('/api/event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    product_id: productId,
+                    action: action,
+                    old_price: oldPrice,
+                    dwell_seconds: dwellSeconds,
+                    purchase_intent: purchaseIntent,
+                    price_sensitivity: priceSensitivity,
+                    urgency: urgency
+                })
+            })
+            .then(res => {
+                if (res.status === 409) {
+                    alert('해당 사용자는 이미 최종 구매를 완료했습니다! 시뮬레이션을 다시 시작하려면 DB를 리셋하세요.');
+                    throw new Error('Session Closed');
+                }
+                if (!res.ok) return res.json().then(e => { throw new Error(e.error); });
+                return res.json();
+            })
+            .then(data => {
+                currentPrices[userId] = data.new_price;
+                document.getElementById(`price-${userId}`).innerText = data.new_price.toLocaleString() + '원';
+
+                if (action === 'coupon') {
+                    showCouponFeedback(userId, data.reason);
+                }
+
+                if (data.session_closed) {
+                    document.getElementById(`card-${userId}`).classList.add('closed');
+                }
+
+                refreshLogs();
+            })
+            .catch(err => {
+                console.warn(err);
+            });
+        }
+
+        function showCouponFeedback(userId, reason) {
+            const box = document.getElementById(`coupon-box-${userId}`);
+            box.style.display = 'block';
+            
+            if (reason.includes("20%") || reason.includes("21%") || reason.includes("22%") || reason.includes("23%") || reason.includes("24%") || reason.includes("25%")) {
+                box.style.backgroundColor = '#fef2f2';
+                box.style.border = '1px solid #fca5a5';
+                box.style.color = '#b91c1c';
+            } else if (reason.includes("5%") || reason.includes("6%") || reason.includes("7%") || reason.includes("8%") || reason.includes("9%") || reason.includes("10%")) {
+                box.style.backgroundColor = '#f0fdf4';
+                box.style.border = '1px solid #bbf7d0';
+                box.style.color = '#15803d';
+            } else {
+                box.style.backgroundColor = '#fef3c7';
+                box.style.border = '1px solid #fde68a';
+                box.style.color = '#b45309';
+            }
+            
+            box.innerHTML = `<strong>🎁 AI 쿠폰 발행 결과</strong><div style="margin-top: 4px; line-height: 1.4;">${reason}</div>`;
+        }
+
+        function resetSimulator() {
+            if (!confirm('정말 시뮬레이션 데이터를 모두 비우고 초기화하시겠습니까?')) return;
+            fetch('/api/reset', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    alert('시뮬레이터가 성공적으로 초기화되었습니다.');
+                    document.querySelectorAll('.user-card').forEach(card => {
+                        card.classList.remove('closed');
+                    });
+                    document.querySelectorAll('.coupon-box').forEach(box => {
+                        box.style.display = 'none';
+                    });
+                    const userIds = ['parent', 'smart', 'loyal'];
+                    userIds.forEach(id => changeProduct(id));
+                    refreshLogs();
+                }
+            });
+        }
+
+        function refreshLogs() {
+            fetch('/api/events?limit=100')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('log-count').innerText = data.length + '개 기록됨';
+                const tbody = document.getElementById('log-tbody');
+                tbody.innerHTML = '';
+
+                data.forEach(ev => {
+                    const tr = document.createElement('tr');
+                    
+                    let deltaStyle = '';
+                    let deltaText = ev.delta.toLocaleString() + '원';
+                    if (ev.delta > 0) {
+                        deltaStyle = 'class="delta-plus"';
+                        deltaText = '+' + deltaText;
+                    } else if (ev.delta < 0) {
+                        deltaStyle = 'class="delta-minus"';
+                    }
+
+                    tr.innerHTML = `
+                        <td>${ev.id}</td>
+                        <td style="font-size: 0.75rem; white-space: nowrap;">${ev.created_at.replace('T', ' ')}</td>
+                        <td><strong>${ev.user_name}</strong><br><span style="font-size: 0.75rem; color: #64748b;">${ev.segment}</span></td>
+                        <td>${ev.brand}<br><span style="font-size: 0.75rem; color: #64748b;">${ev.product_name}</span></td>
+                        <td><span style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">${ev.action}</span></td>
+                        <td style="font-weight: 500;">${ev.reason}</td>
+                        <td>${ev.old_price.toLocaleString()}원</td>
+                        <td ${deltaStyle}>${deltaText}</td>
+                        <td style="color:#0f172a; font-weight: bold;">${ev.new_price.toLocaleString()}원</td>
+                        <td><span style="color:#4f46e5; font-weight: bold;">${ev.confidence}%</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
