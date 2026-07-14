@@ -353,11 +353,12 @@ def export_json():
 
 init_db()
 
+import os
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5001, debug=True)
-    
+        app.run(host="127.0.0.1", port=5001, debug=True)
+        
 if __name__ == '__main__':
-    # Render가 지정해주는 포트를 가져오고, 없으면 5000번을 씁니다.
-    port = int(os.environ.get('PORT', 5000))
-    # 0.0.0.0으로 설정해야 외부(인터넷)에서 접속이 가능합니다.
-    app.run(host='0.0.0.0', port=port)
+        # Render가 지정해주는 포트를 가져오고, 없으면 5000번을 씁니다.
+        port = int(os.environ.get('PORT', 5000))
+        # 0.0.0.0으로 설정해야 외부(인터넷)에서 접속이 가능합니다.
+        app.run(host='0.0.0.0', port=port)
