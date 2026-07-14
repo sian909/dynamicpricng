@@ -831,7 +831,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: true,{{}}
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
@@ -944,7 +944,7 @@
 
             // 943라인
             document.getElementById(`mall-rating-${userId}`).innerText = `⭐ ${rating} (${parseInt(reviews).toLocaleString()})`;
-            document.getElementById(`mall-stock-count-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = stock;
+            document.getElementById(`mall-stock-count-${userId}`).innerText = stock;
 
             // 새로 바뀐 브랜드에 맞춰 체류 리셋
             dwellTimes[userId] = 0;
