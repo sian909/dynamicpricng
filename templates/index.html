@@ -939,8 +939,11 @@
             const reviews = selectedOpt.getAttribute('data-reviews');
 
             // 가상몰 화면 상품 텍스트 갱신
+            document.get// 942라인
             document.getElementById(`mall-title-${userId}`).innerText = name;
-            document.getElementById(`mall-rating-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = `⭐ ${rating} (${parseInt(reviews).toLocaleString()}개 후기)`;
+
+            // 943라인
+            document.getElementById(`mall-rating-${userId}`).innerText = `⭐ ${rating} (${parseInt(reviews).toLocaleString()})`;
             document.getElementById(`mall-stock-count-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = stock;
 
             // 새로 바뀐 브랜드에 맞춰 체류 리셋
