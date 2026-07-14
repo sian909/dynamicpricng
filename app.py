@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import csv
@@ -319,8 +318,20 @@ def reset():
 
 @app.get("/api/export.csv")
 def export_csv():
+    # user_id 쿼리 파라미터가 들어왔는지 확인
+    user_id = request.args.get("user_id")
+    
     with connect() as conn:
-        rows = [dict(row) for row in conn.execute("SELECT * FROM events ORDER BY id ASC").fetchall()]
+        if user_id:
+            rows = [dict(row) for row in conn.execute(
+                "SELECT * FROM events WHERE user_id = ? ORDER BY id ASC", (user_id,)
+            ).fetchall()]
+            filename = f"personalized_pricing_events_{user_id}.csv"
+        else:
+            rows = [dict(row) for row in conn.execute(
+                "SELECT * FROM events ORDER BY id ASC"
+            ).fetchall()]
+            filename = "personalized_pricing_events_all.csv"
 
     output = io.StringIO()
     fieldnames = list(rows[0].keys()) if rows else [
@@ -332,12 +343,13 @@ def export_csv():
     ]
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
-    writer.writerows(rows)
+    if rows:
+        writer.writerows(rows)
 
     return Response(
         output.getvalue(),
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=personalized_pricing_events.csv"},
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 @app.get("/api/export.json")
@@ -356,7 +368,5 @@ init_db()
 import os
         
 if __name__ == '__main__':
-        # Render가 지정해주는 포트를 가져오고, 없으면 5000번을 씁니다.
         port = int(os.environ.get('PORT', 5000))
-        # 0.0.0.0으로 설정해야 외부(인터넷)에서 접속이 가능합니다.
         app.run(host='0.0.0.0', port=port)

@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Pricing Simulator</title>
+    <!-- Chart.js 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
-            --bg-main: #f8fafc;
+            --bg-main: #f1f5f9;
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-sub: #475569;
             --border-color: #e2e8f0;
+            --mall-border: #334155;
         }
 
         body {
@@ -24,7 +27,7 @@
         }
 
         .container {
-            max-width: 1300px;
+            max-width: 1440px;
             margin: 0 auto;
         }
 
@@ -34,7 +37,7 @@
         }
 
         header h1 {
-            font-size: 2rem;
+            font-size: 2.2rem;
             color: #1e1b4b;
             margin: 0 0 10px 0;
         }
@@ -55,35 +58,42 @@
         .user-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             position: relative;
+            transition: all 0.3s ease;
         }
 
         .user-card.closed {
-            opacity: 0.75;
-            background-color: #f1f5f9;
+            opacity: 0.8;
+            background-color: #f8fafc;
         }
 
         .badge-closed {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 20px;
+            right: 20px;
             background-color: #10b981;
             color: white;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: bold;
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 9999px;
             display: none;
+            z-index: 20;
         }
 
         .user-card.closed .badge-closed {
             display: inline-block;
+        }
+
+        .user-header-info {
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
         }
 
         .user-segment {
@@ -95,145 +105,337 @@
         }
 
         .user-name {
-            font-size: 1.5rem;
-            margin: 4px 0 8px 0;
+            font-size: 1.4rem;
+            margin: 4px 0 6px 0;
             color: #1e293b;
         }
 
         .user-profile {
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             color: var(--text-sub);
-            line-height: 1.5;
-            margin-bottom: 16px;
+            line-height: 1.4;
             background-color: #f8fafc;
-            padding: 10px;
+            padding: 8px 12px;
             border-radius: 8px;
             border-left: 3px solid var(--primary);
         }
 
-        .price-section {
-            background-color: #eef2ff;
-            border-radius: 12px;
-            padding: 15px;
+        /* 📱 가상 쇼핑몰 디바이스 UI */
+        .mall-container {
+            border: 2px solid var(--mall-border);
+            border-radius: 16px;
+            background: #ffffff;
+            padding: 14px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
             margin-bottom: 20px;
-            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
-        .price-label {
-            font-size: 0.75rem;
-            color: #4f46e5;
-            font-weight: bold;
-        }
-
-        .price-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #1e1b4b;
-            margin: 5px 0;
-        }
-
-        .base-price {
-            font-size: 0.8rem;
-            color: #64748b;
-            text-decoration: line-through;
-        }
-
-        .param-group {
-            margin-bottom: 15px;
-            font-size: 0.8rem;
-        }
-
-        .param-row {
+        .mall-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 4px;
-            color: var(--text-sub);
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            color: #64748b;
         }
 
-        .param-slider {
-            width: 100%;
-            accent-color: var(--primary);
+        .mall-brand-logo {
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
         .product-select-group {
-            margin-bottom: 20px;
-        }
-        
-        .product-select-group label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: var(--text-sub);
-            margin-bottom: 6px;
+            margin-bottom: 10px;
         }
 
         .product-select {
             width: 100%;
-            padding: 8px 12px;
+            padding: 8px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background-color: white;
-            font-size: 0.875rem;
+            background-color: #f8fafc;
+            font-size: 0.8rem;
+            font-weight: bold;
             color: var(--text-main);
-        }
-
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .btn-action {
-            background-color: #f1f5f9;
-            color: #334155;
-            border: 1px solid var(--border-color);
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
         }
 
-        .btn-action:hover {
-            background-color: #e2e8f0;
+        .mall-product-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        .mall-product-img {
+            width: 45px;
+            height: 45px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .mall-product-details {
+            flex-grow: 1;
+        }
+
+        .mall-prod-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .mall-prod-rating {
+            font-size: 0.7rem;
+            color: #f59e0b;
+            margin: 2px 0 0 0;
+        }
+
+        .mall-price-box {
+            text-align: center;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .mall-price-title {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .mall-price-title.coupon-active {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .mall-price-value {
+            font-size: 1.5rem;
+            font-weight: 800;
             color: #0f172a;
         }
 
-        .btn-coupon {
+        .mall-coupon-badge {
+            display: none;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* 쇼핑몰 실시간 알림 배너 */
+        .mall-banner {
+            display: none;
+            font-size: 0.7rem;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .delivery-banner {
+            background: #ecfdf5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .stock-banner {
+            background: #fffbeb;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .review-box {
+            display: none;
+            background: #f1f5f9;
+            color: #334155;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            border-left: 4px solid #64748b;
+        }
+
+        /* 쇼핑몰 소비자 액션 그리드 */
+        .mall-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .mall-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .mall-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .mall-btn.active {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .mall-btn.btn-cart.active {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .mall-btn-coupon {
             grid-column: span 2;
-            background-color: #4f46e5;
+            background: #f59e0b;
             color: white;
             border: none;
             padding: 10px;
-            font-weight: bold;
-            margin-top: 5px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
         }
 
-        .btn-coupon:hover {
-            background-color: #4338ca;
+        .mall-btn-coupon:hover {
+            background: #d97706;
         }
 
-        .btn-purchase {
+        .mall-btn-purchase {
             grid-column: span 2;
-            background-color: #10b981;
+            background: #10b981;
             color: white;
             border: none;
             padding: 10px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
         }
 
-        .btn-purchase:hover {
-            background-color: #059669;
+        .mall-btn-purchase:hover {
+            background: #059669;
         }
+
+        /* 📊 분석 모니터 및 그래프 대시보드 */
+        .analyst-dashboard {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        .live-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 2px 6px;
+            border-radius: 99px;
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.85; }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0.85; }
+        }
+
+        /* 시뮬레이터 실시간 지표 그래프 영역 */
+        .chart-container {
+            position: relative;
+            height: 110px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #f1f5f9;
+            padding: 4px;
+        }
+
+        /* 행동 분석 지표 프로그레스 바 */
+        .metric-group {
+            margin-bottom: 8px;
+        }
+
+        .metric-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 2px;
+        }
+
+        .metric-bar-container {
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            height: 6px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .metric-bar {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.3s ease-in-out;
+            width: 0%;
+        }
+
+        .bar-intent { background-color: #10b981; }
+        .bar-urgency { background-color: #f59e0b; }
+        .bar-sensitivity { background-color: #3b82f6; }
 
         .coupon-box {
-            margin-top: 12px;
-            padding: 12px;
+            margin-top: 10px;
+            padding: 8px 12px;
             border-radius: 8px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             display: none;
             animation: fadeIn 0.3s ease-in-out;
         }
@@ -243,6 +445,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 시스템 환경설정 패널 */
         .system-controls {
             display: flex;
             justify-content: space-between;
@@ -273,7 +476,7 @@
         .btn-export {
             background-color: #64748b;
             color: white;
-            margin-left: 10px;
+            margin-left: 8px;
             text-decoration: none;
             display: inline-block;
             line-height: 1.2;
@@ -281,6 +484,23 @@
             border-radius: 8px;
             font-size: 0.875rem;
             font-weight: bold;
+        }
+
+        .btn-export-sm {
+            padding: 4px 8px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-export-sm:hover {
+            background-color: #cbd5e1;
+            color: #0f172a;
         }
 
         .btn-system:hover, .btn-export:hover {
@@ -352,97 +572,150 @@
     <div class="container">
         <header>
             <h1>Dynamic Pricing 실시간 가격 시뮬레이터</h1>
-    
+            <p>소비자의 실시간 탐색 행동 및 체류 시간을 감지하여 최적의 쿠폰 혜택가치를 자동 산정합니다.</p>
+        </header>
 
         <div class="user-grid">
             {% for user in users %}
             <div class="user-card" id="card-{{ user.id }}">
-                <span class="badge-closed">구매 완료됨</span>
-                <div>
+                <span class="badge-closed">💳 구매 완료됨</span>
+                
+                <!-- 상단: 소비자 프로필 세그먼트 정보 -->
+                <div class="user-header-info">
                     <span class="user-segment">{{ user.segment }}</span>
                     <h3 class="user-name">{{ user.name }}</h3>
                     <div class="user-profile">{{ user.profile }}</div>
+                </div>
 
+                <!-- 📱 중단: 가상 E-Commerce 쇼핑몰 환경 (Runtime Shop) -->
+                <div class="mall-container">
+                    <div class="mall-header">
+                        <span class="mall-brand-logo">⚡ Runtime Shop</span>
+                        <span style="color: #ef4444; font-size: 0.65rem;">● LIVE SIMULATION</span>
+                    </div>
+
+                    <!-- 상품 선택 드롭다운 -->
                     <div class="product-select-group">
-                        <label>선택한 상품</label>
                         <select class="product-select" id="prod-select-{{ user.id }}" onchange="changeProduct('{{ user.id }}')">
                             {% for p in products %}
-                            <option value="{{ p.id }}" data-baseprice="{{ p.base_price }}">{{ p.brand }} - {{ p.name }}</option>
+                            <option value="{{ p.id }}" data-baseprice="{{ p.base_price }}" data-brand="{{ p.brand }}" data-name="{{ p.name }}" data-stock="{{ p.stock }}" data-rating="{{ p.rating }}" data-reviews="{{ p.reviews }}">
+                                {{ p.brand }} - {{ p.name }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div class="price-section">
-                        <span class="price-label">현재 가격 (동적 변경)</span>
-                        <div class="price-value" id="price-{{ user.id }}">0원</div>
-                        <div class="base-price" id="baseprice-{{ user.id }}">기준가: 0원</div>
+                    <!-- 상품 미니 정보 및 별점 -->
+                    <div class="mall-product-preview">
+                        <div class="mall-product-img">🌡️</div>
+                        <div class="mall-product-details">
+                            <h4 class="mall-prod-title" id="mall-title-{{ user.id }}">귀·이마 겸용 체온계 Pro</h4>
+                            <p class="mall-prod-rating" id="mall-rating-{{ user.id }}">⭐ 4.8 (2,184개 후기)</p>
+                        </div>
                     </div>
 
-                    <div class="param-group">
-                        <div class="param-row">
-                            <span>가격 민감도 (Sensitivity)</span>
-                            <span id="lbl-sens-{{ user.id }}">{{ user.sensitivity }}%</span>
-                        </div>
-                        <input type="range" class="param-slider" id="sens-{{ user.id }}" min="0" max="100" value="{{ user.sensitivity }}" oninput="updateParamLabel('{{ user.id }}', 'sens')">
+                    <!-- 실시간 다이내믹 가격 배너 (도착일 및 재고 상황 알림) -->
+                    <div class="mall-banner delivery-banner" id="delivery-banner-{{ user.id }}">
+                        🚚 <strong>내일 도착 보장</strong> (오후 11시 전 주문 시 내일 아침 도착 예정)
+                    </div>
+                    <div class="mall-banner stock-banner" id="stock-banner-{{ user.id }}">
+                        ⚠️ <strong>품절 임박!</strong> 현재 상품 재고 <span id="mall-stock-count-{{ user.id }}">7</span>개 남음
+                    </div>
+                    <div class="review-box" id="review-box-{{ user.id }}"></div>
+
+                    <!-- 가격 출력 패널 (평상시에는 기준가만 표시, 쿠폰 적용 시 변동) -->
+                    <div class="mall-price-box">
+                        <span class="mall-price-title" id="mall-price-title-{{ user.id }}">기준가</span>
+                        <span class="mall-coupon-badge" id="mall-coupon-badge-{{ user.id }}">쿠폰할인</span>
+                        <div class="mall-price-value" id="mall-price-{{ user.id }}">0원</div>
                     </div>
 
-                    <div class="param-group">
-                        <div class="param-row">
-                            <span>긴급도 (Urgency)</span>
-                            <span id="lbl-urg-{{ user.id }}">{{ user.urgency }}%</span>
-                        </div>
-                        <input type="range" class="param-slider" id="urg-{{ user.id }}" min="0" max="100" value="{{ user.urgency }}" oninput="updateParamLabel('{{ user.id }}', 'urg')">
-                    </div>
-
-                    <div class="param-group">
-                        <div class="param-row">
-                            <span>구매 의도 (Purchase Intent)</span>
-                            <span id="lbl-intent-{{ user.id }}">50%</span>
-                        </div>
-                        <input type="range" class="param-slider" id="intent-{{ user.id }}" min="0" max="100" value="50" oninput="updateParamLabel('{{ user.id }}', 'intent')">
-                    </div>
-
-                    <div class="param-group">
-                        <div class="param-row">
-                            <span>체류 시간 (Dwell Sec)</span>
-                            <span id="lbl-dwell-{{ user.id }}">0초</span>
-                        </div>
-                        <input type="range" class="param-slider" id="dwell-{{ user.id }}" min="0" max="30" value="0" oninput="updateParamLabel('{{ user.id }}', 'dwell')">
+                    <!-- 쇼핑 행동 트리거 버튼 배열 -->
+                    <div class="mall-btn-grid">
+                        <button class="mall-btn" onclick="clickReview('{{ user.id }}')">💬 후기 보기</button>
+                        <button class="mall-btn" onclick="clickDelivery('{{ user.id }}')">🚚 도착일 확인</button>
+                        <button class="mall-btn" onclick="clickStock('{{ user.id }}')">📦 재고 확인</button>
+                        <button class="mall-btn" id="btn-fav-{{ user.id }}" onclick="clickFavorite('{{ user.id }}')">❤️ 찜하기</button>
+                        <button class="mall-btn btn-cart" id="btn-cart-{{ user.id }}" onclick="clickCart('{{ user.id }}')">🛒 장바구니</button>
+                        <button class="mall-btn" onclick="clickSortLow('{{ user.id }}')">🔍 최저가 정렬</button>
+                        
+                        <button class="mall-btn" style="grid-column: span 2; background-color: #cbd5e1; color:#0f172a;" onclick="clickRefresh('{{ user.id }}')">🔄 페이지 새로고침</button>
+                        <button class="mall-btn-coupon" onclick="clickGetCoupon('{{ user.id }}')">🎫 특별 동적 쿠폰 적용 받기</button>
+                        <button class="mall-btn-purchase" onclick="clickPurchase('{{ user.id }}')">💳 최종 안전 결제 완료</button>
                     </div>
                 </div>
 
-                <div>
-                    <h4 style="margin: 10px 0 6px 0; font-size:0.8rem; color: #475569;">고객 행동 시뮬레이션</h4>
-                    <div class="action-grid">
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'view_review')">후기 조회 (+300)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'deep_review')">상세 후기 (+550)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'check_shipping')">도착일 확인 (+850+긴급도)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'check_stock')">재고 확인 (+450)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'favorite')">찜하기 (+350)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'dwell_15')">15초 체류 (+420+의도)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'add_cart')">장바구니 담기 (+1400+충성도)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'sort_low')">최저가 정렬 (-850)</button>
-                        <button class="btn-action" onclick="sendEvent('{{ user.id }}', 'compare_brand')">타 브랜드 비교 (-700-민감도)</button>
-                        
-                        <button class="btn-action btn-coupon" onclick="sendEvent('{{ user.id }}', 'coupon')">🎁 개인화 쿠폰 지급 & 적용</button>
-                        <button class="btn-action btn-purchase" onclick="sendEvent('{{ user.id }}', 'purchase_complete')">💳 최종 구매 완료</button>
+                <!-- 📊 하단: 행동 데이터 수집 모니터 및 그래프 -->
+                <div class="analyst-dashboard">
+                    <div class="dashboard-header">
+                        <span class="dashboard-title">📈 AI 가치평가 및 실시간 추적</span>
+                        <div class="live-timer">
+                            <span>⏱️ 실시간 체류:</span>
+                            <span id="lbl-dwell-{{ user.id }}">0초</span>
+                        </div>
                     </div>
 
+                    <!-- 실시간 가격 흐름 꺾은선 그래프 영역 -->
+                    <div class="chart-container">
+                        <canvas id="chart-{{ user.id }}"></canvas>
+                    </div>
+
+                    <!-- 실시간 분석 데이터 지표 -->
+                    <div class="metric-group">
+                        <div class="metric-label-row">
+                            <span>구매 의사 (Intent)</span>
+                            <span id="lbl-intent-{{ user.id }}">20%</span>
+                        </div>
+                        <div class="metric-bar-container">
+                            <div class="metric-bar bar-intent" id="bar-intent-{{ user.id }}"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-group">
+                        <div class="metric-label-row">
+                            <span>긴급도 (Urgency)</span>
+                            <span id="lbl-urg-{{ user.id }}">{{ user.urgency }}%</span>
+                        </div>
+                        <div class="metric-bar-container">
+                            <div class="metric-bar bar-urgency" id="bar-urg-{{ user.id }}"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-group">
+                        <div class="metric-label-row">
+                            <span>가격 민감도 (Sensitivity)</span>
+                            <span id="lbl-sens-{{ user.id }}">{{ user.sensitivity }}%</span>
+                        </div>
+                        <div class="metric-bar-container">
+                            <div class="metric-bar bar-sensitivity" id="bar-sens-{{ user.id }}"></div>
+                        </div>
+                    </div>
+
+                    <!-- 백엔드 쿠폰 평가 피드백 전송 창 -->
                     <div class="coupon-box" id="coupon-box-{{ user.id }}"></div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
+        <!-- 하단 관리 시스템 컨트롤 영역 -->
         <div class="system-controls">
             <div>
-                <strong style="color: #1e293b;">시스템 관리 도구</strong>
-                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #64748b;">DB를 완전히 비우거나 시뮬레이션 데이터를 다운로드할 수 있습니다.</p>
+                <strong style="color: #1e293b; font-size: 1.1rem;">💻 시뮬레이터 시스템 어드민 콘솔</strong>
+                <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #64748b;">DB를 완전히 초기화하거나 시뮬레이션 결과 데이터를 원하시는 대로 다운로드할 수 있습니다.</p>
             </div>
-            <div>
-                <button class="btn-system btn-reset" onclick="resetSimulator()">시뮬레이터 DB 리셋</button>
-                <a href="/api/export.csv" class="btn-export">CSV 다운로드</a>
-                <a href="/api/export.json" class="btn-export" style="background-color: #3b82f6;">JSON 다운로드</a>
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                <div>
+                    <button class="btn-system btn-reset" onclick="resetSimulator()">시뮬레이터 DB 리셋</button>
+                    <a href="/api/export.csv" class="btn-export">전체 통합 CSV</a>
+                    <a href="/api/export.json" class="btn-export" style="background-color: #3b82f6;">전체 통합 JSON</a>
+                </div>
+                <div style="font-size: 0.8rem; color: #475569; display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+                    <strong>💾 고객별 개별 CSV 내보내기:</strong>
+                    <a href="/api/export.csv?user_id=parent" class="btn-export-sm">김민서(parent)</a>
+                    <a href="/api/export.csv?user_id=smart" class="btn-export-sm">박지훈(smart)</a>
+                    <a href="/api/export.csv?user_id=loyal" class="btn-export-sm">이선영(loyal)</a>
+                </div>
             </div>
         </div>
 
@@ -472,49 +745,331 @@
     </div>
 
     <script>
+        // 현재 가격과 세션 상태 보관 변수
         const currentPrices = {};
+        const charts = {};
+        const dwellTimes = { parent: 0, smart: 0, loyal: 0 };
+        const triggeredDwells = {
+            parent: { 4: false, 8: false, 15: false },
+            smart: { 4: false, 8: false, 15: false },
+            loyal: { 4: false, 8: false, 15: false }
+        };
+
+        // 실시간 행동 분석을 위한 상태 객체
+        const userStates = {
+            parent: { reviewsClicked: 0, deliveryChecked: false, stockChecked: false, favorited: false, cartAdded: false, sortedLowest: false, brandCompared: false },
+            smart: { reviewsClicked: 0, deliveryChecked: false, stockChecked: false, favorited: false, cartAdded: false, sortedLowest: false, brandCompared: false },
+            loyal: { reviewsClicked: 0, deliveryChecked: false, stockChecked: false, favorited: false, cartAdded: false, sortedLowest: false, brandCompared: false }
+        };
+
+        const baseStats = {
+            parent: { sensitivity: 32, urgency: 84, loyalty: 52 },
+            smart: { sensitivity: 88, urgency: 25, loyalty: 24 },
+            loyal: { sensitivity: 44, urgency: 46, loyalty: 91 }
+        };
+
+        const currentMetrics = {
+            parent: { intent: 20, urgency: 84, sensitivity: 32 },
+            smart: { intent: 20, urgency: 25, sensitivity: 88 },
+            loyal: { intent: 20, urgency: 46, sensitivity: 44 }
+        };
 
         window.addEventListener('DOMContentLoaded', () => {
             const userIds = ['parent', 'smart', 'loyal'];
             userIds.forEach(id => {
-                changeProduct(id);
+                changeProduct(id, true);
             });
             refreshLogs();
+
+            // ⏱️ 1초 주기 실시간 타임 핸들러 작동 (체류 시간 실시간 가중 반영)
+            setInterval(() => {
+                userIds.forEach(userId => {
+                    const card = document.getElementById(`card-${userId}`);
+                    if (card.classList.contains('closed')) return;
+
+                    dwellTimes[userId]++;
+                    document.getElementById(`lbl-dwell-${userId}`).innerText = dwellTimes[userId] + '초';
+                    
+                    // 행동에 따른 프로그레스 지표 및 가격 분석 리셋
+                    updateDynamicMetrics(userId);
+
+                    // 백엔드 측 dwell 규칙 트리거 체크 (4초, 8초, 15초 돌파 시 자동 다이내믹 프라이싱 반영)
+                    const t = dwellTimes[userId];
+                    if (t === 4 && !triggeredDwells[userId][4]) {
+                        triggeredDwells[userId][4] = true;
+                        sendEvent(userId, 'dwell_4');
+                    } else if (t === 8 && !triggeredDwells[userId][8]) {
+                        triggeredDwells[userId][8] = true;
+                        sendEvent(userId, 'dwell_8');
+                    } else if (t === 15 && !triggeredDwells[userId][15]) {
+                        triggeredDwells[userId][15] = true;
+                        sendEvent(userId, 'dwell_15');
+                    }
+                });
+            }, 1000);
         });
 
-        function updateParamLabel(userId, type) {
-            const val = document.getElementById(`${type}-${userId}`).value;
-            const label = document.getElementById(`lbl-${type}-${userId}`);
-            if (type === 'dwell') {
-                label.innerText = val + '초';
-            } else {
-                label.innerText = val + '%';
+        // 📈 Chart.js 그래프 초기화 함수
+        function initChart(userId, initialPrice) {
+            const ctx = document.getElementById(`chart-${userId}`).getContext('2d');
+            if (charts[userId]) {
+                charts[userId].destroy();
+            }
+            charts[userId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['시작'],
+                    datasets: [{
+                        label: '실시간 적용 가치 (원)',
+                        data: [initialPrice],
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+                        y: { display: true, ticks: { font: { size: 9 }, callback: (v) => v.toLocaleString() } }
+                    }
+                }
+            });
+        }
+
+        // 📈 그래프 실시간 업데이트 함수
+        function updateChart(userId, label, newPrice) {
+            if (charts[userId]) {
+                charts[userId].data.labels.push(label);
+                charts[userId].data.datasets[0].data.push(newPrice);
+                charts[userId].update();
             }
         }
 
-        function changeProduct(userId) {
+        // 행동 데이터 분석 후 구매지표 시각화 업데이트
+        function updateDynamicMetrics(userId) {
+            const state = userStates[userId];
+            const base = baseStats[userId];
+            const dwell = dwellTimes[userId];
+
+            // 1. 구매 의사 (Intent): 후기 조회수, 장바구니, 찜하기 여부 및 체류 초 가중치 결합
+            let intent = 20 + (state.reviewsClicked * 15) + (state.cartAdded ? 35 : 0) + (state.favorited ? 20 : 0) + Math.min(dwell * 1.5, 30);
+            intent = Math.min(Math.max(Math.round(intent), 0), 100);
+
+            // 2. 긴급도 (Urgency): 기본 긴급 성향 + 도착일 탐색 가산 + 재고 확인 가산
+            let urg = base.urgency + (state.deliveryChecked ? 20 : 0) + (state.stockChecked ? 15 : 0);
+            urg = Math.min(Math.max(Math.round(urg), 0), 100);
+
+            // 3. 가격 민감도 (Sensitivity): 기본 민감도 + 최저가 정렬 필터 가산 + 타브랜드 비교 가산
+            let sens = base.sensitivity + (state.sortedLowest ? 20 : 0) + (state.brandCompared ? 15 : 0);
+            sens = Math.min(Math.max(Math.round(sens), 0), 100);
+
+            currentMetrics[userId] = { intent, urgency: urg, sensitivity: sens };
+
+            // UI 돔 바인딩 업데이트
+            document.getElementById(`lbl-intent-${userId}`).innerText = intent + '%';
+            document.getElementById(`bar-intent-${userId}`).style.width = intent + '%';
+
+            document.getElementById(`lbl-urg-${userId}`).innerText = urg + '%';
+            document.getElementById(`bar-urg-${userId}`).style.width = urg + '%';
+
+            document.getElementById(`lbl-sens-${userId}`).innerText = sens + '%';
+            document.getElementById(`bar-sens-${userId}`).style.width = sens + '%';
+        }
+
+        // 🔄 쇼핑몰 페이지 리셋/새로고침 기능 (체류 시간 초기화)
+        function clickRefresh(userId) {
+            dwellTimes[userId] = 0;
+            triggeredDwells[userId] = { 4: false, 8: false, 15: false };
+            
+            userStates[userId] = {
+                reviewsClicked: 0,
+                deliveryChecked: false,
+                stockChecked: false,
+                favorited: false,
+                cartAdded: false,
+                sortedLowest: false,
+                brandCompared: false
+            };
+
+            // UI 제어 원복
+            document.getElementById(`lbl-dwell-${userId}`).innerText = '0초';
+            document.getElementById(`delivery-banner-${userId}`).style.display = 'none';
+            document.getElementById(`stock-banner-${userId}`).style.display = 'none';
+            document.getElementById(`review-box-${userId}`).style.display = 'none';
+            document.getElementById(`review-box-${userId}`).innerText = '';
+            document.getElementById(`btn-fav-${userId}`).classList.remove('active');
+            document.getElementById(`btn-cart-${userId}`).classList.remove('active');
+
+            // 쿠폰 혜택 취소 (기준가로 복원)
             const select = document.getElementById(`prod-select-${userId}`);
             const selectedOpt = select.options[select.selectedIndex];
             const basePrice = parseInt(selectedOpt.getAttribute('data-baseprice'));
             
+            document.getElementById(`mall-price-${userId}`).innerText = basePrice.toLocaleString() + '원';
+            document.getElementById(`mall-price-title-${userId}`).innerText = '기준가';
+            document.getElementById(`mall-price-title-${userId}`).className = 'mall-price-title';
+            document.getElementById(`mall-coupon-badge-${userId}`).style.display = 'none';
+            document.getElementById(`coupon-box-${userId}`).style.display = 'none';
+
             currentPrices[userId] = basePrice;
+            initChart(userId, basePrice);
+            updateDynamicMetrics(userId);
             
-            document.getElementById(`price-${userId}`).innerText = basePrice.toLocaleString() + '원';
-            document.getElementById(`baseprice-${userId}`).innerText = '기준가: ' + basePrice.toLocaleString() + '원';
-            
-            const couponBox = document.getElementById(`coupon-box-${userId}`);
-            couponBox.style.display = 'none';
+            alert('쇼핑몰 페이지를 완전히 새로고침했습니다. 체류 시간 및 탐색 상태가 초기화되었습니다.');
         }
 
+        // 🌡️ 상품 옵션 드롭다운 변경 시 (브랜드 비교 감지)
+        function changeProduct(userId, isInit = false) {
+            const select = document.getElementById(`prod-select-${userId}`);
+            const selectedOpt = select.options[select.selectedIndex];
+            
+            const basePrice = parseInt(selectedOpt.getAttribute('data-baseprice'));
+            const brand = selectedOpt.getAttribute('data-brand');
+            const name = selectedOpt.getAttribute('data-name');
+            const stock = selectedOpt.getAttribute('data-stock');
+            const rating = selectedOpt.getAttribute('data-rating');
+            const reviews = selectedOpt.getAttribute('data-reviews');
+
+            // 가상몰 화면 상품 텍스트 갱신
+            document.getElementById(`mall-title-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = name;
+            document.getElementById(`mall-rating-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = `⭐ ${rating} (${parseInt(reviews).toLocaleString()}개 후기)`;
+            document.getElementById(`mall-stock-count-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = stock;
+
+            // 새로 바뀐 브랜드에 맞춰 체류 리셋
+            dwellTimes[userId] = 0;
+            triggeredDwells[userId] = { 4: false, 8: false, 15: false };
+            
+            // 비교 분석 플래그 활성화
+            userStates[userId].reviewsClicked = 0;
+            userStates[userId].deliveryChecked = false;
+            userStates[userId].stockChecked = false;
+            userStates[userId].favorited = false;
+            userStates[userId].cartAdded = false;
+            userStates[userId].sortedLowest = false;
+            if (!isInit) {
+                userStates[userId].brandCompared = true;
+            }
+
+            // 배너 숨기기 및 원복
+            document.getElementById(`delivery-banner-${userId}`).style.display = 'none';
+            document.getElementById(`stock-banner-${userId}`).style.display = 'none';
+            document.getElementById(`review-box-${userId}`).style.display = 'none';
+            document.getElementById(`btn-fav-${userId}`).classList.remove('active');
+            document.getElementById(`btn-cart-${userId}`).classList.remove('active');
+
+            // 기본 가격으로 노출 복구
+            currentPrices[userId] = basePrice;
+            document.getElementById(`mall-price-${userId}`).innerText = basePrice.toLocaleString() + '원';
+            document.getElementById(`mall-price-title-${userId}`).innerText = '기준가';
+            document.getElementById(`mall-price-title-${userId}`).className = 'mall-price-title';
+            document.getElementById(`mall-coupon-badge-${userId}`).style.display = 'none';
+            document.getElementById(`coupon-box-${userId}`).style.display = 'none';
+
+            initChart(userId, basePrice);
+            updateDynamicMetrics(userId);
+
+            // 초기 부팅 외에 변경 시에는 백엔드에 'compare_brand' 이벤트 발송해 가치 조정 진행
+            if (!isInit) {
+                sendEvent(userId, 'compare_brand');
+            }
+        }
+
+        // 💬 소비자 행동: 후기 보기 클릭 연계 로직
+        function clickReview(userId) {
+            userStates[userId].reviewsClicked++;
+            const reviewBox = document.getElementById(`review-box-${userId}`);
+            reviewBox.style.display = 'block';
+
+            let action = 'view_review';
+            if (userStates[userId].reviewsClicked === 1) {
+                reviewBox.innerHTML = `<strong>👍 실시간 구매자 평</strong><div style="margin-top:2px;">"배송 엄청 빠르고 온도 편차 없이 너무 유용해요!" (조*현)</div>`;
+            } else {
+                reviewBox.innerHTML = `<strong>👍 실시간 구매자 평</strong><div style="margin-top:2px;">"포장 꼼꼼하고 아이가 보채지도 않아서 아주 편리해요. 추천합니다!" (이*영)</div>`;
+                action = 'deep_review';
+            }
+            sendEvent(userId, action);
+            updateDynamicMetrics(userId);
+        }
+
+        // 🚚 소비자 행동: 도착일 확인
+        function clickDelivery(userId) {
+            if (userStates[userId].deliveryChecked) return;
+            userStates[userId].deliveryChecked = true;
+            document.getElementById(`delivery-banner-${userId}`).style.display = 'block';
+            sendEvent(userId, 'check_shipping');
+            updateDynamicMetrics(userId);
+        }
+
+        // 📦 소비자 행동: 재고 확인
+        function clickStock(userId) {
+            if (userStates[userId].stockChecked) return;
+            userStates[userId].stockChecked = true;
+            document.getElementById(`stock-banner-${userId}`).style.display = 'block';
+            sendEvent(userId, 'check_stock');
+            updateDynamicMetrics(userId);
+        }
+
+        // ❤️ 소비자 행동: 찜하기 클릭
+        function clickFavorite(userId) {
+            userStates[userId].favorited = !userStates[userId].favorited;
+            const btn = document.getElementById(`btn-fav-${userId}`);
+            if (userStates[userId].favorited) {
+                btn.classList.add('active');
+                sendEvent(userId, 'favorite');
+            } else {
+                btn.classList.remove('active');
+                sendEvent(userId, 'favorite');
+            }
+            updateDynamicMetrics(userId);
+        }
+
+        // 🛒 소비자 행동: 장바구니 담기 클릭
+        function clickCart(userId) {
+            userStates[userId].cartAdded = !userStates[userId].cartAdded;
+            const btn = document.getElementById(`btn-cart-${userId}`);
+            if (userStates[userId].cartAdded) {
+                btn.classList.add('active');
+                sendEvent(userId, 'add_cart');
+            } else {
+                btn.classList.remove('active');
+                sendEvent(userId, 'remove_cart');
+            }
+            updateDynamicMetrics(userId);
+        }
+
+        // 🔍 소비자 행동: 최저가 정렬 필터 사용
+        function clickSortLow(userId) {
+            if (userStates[userId].sortedLowest) return;
+            userStates[userId].sortedLowest = true;
+            alert("낮은 가격순 정렬 필터를 사용하여 경쟁 사 데이터를 비교 탐색합니다.");
+            sendEvent(userId, 'sort_low');
+            updateDynamicMetrics(userId);
+        }
+
+        // 🎫 소비자 행동: 쿠폰 받기 (백엔드 계산 할인율 즉시 대입 및 적용가 출력)
+        function clickGetCoupon(userId) {
+            sendEvent(userId, 'coupon');
+        }
+
+        // 💳 소비자 행동: 최종 구매 진행
+        function clickPurchase(userId) {
+            sendEvent(userId, 'purchase_complete');
+        }
+
+        // 백엔드 데이터 전송 전 처리 핸들러
         function sendEvent(userId, action) {
             const select = document.getElementById(`prod-select-${userId}`);
             const productId = select.value;
-            
             const oldPrice = currentPrices[userId];
-            const dwellSeconds = parseInt(document.getElementById(`dwell-${userId}`).value);
-            const purchaseIntent = parseInt(document.getElementById(`intent-${userId}`).value);
-            const priceSensitivity = parseInt(document.getElementById(`sens-${userId}`).value);
-            const urgency = parseInt(document.getElementById(`urg-${userId}`).value);
+            const dwellSeconds = dwellTimes[userId];
 
             fetch('/api/event', {
                 method: 'POST',
@@ -525,29 +1080,38 @@
                     action: action,
                     old_price: oldPrice,
                     dwell_seconds: dwellSeconds,
-                    purchase_intent: purchaseIntent,
-                    price_sensitivity: priceSensitivity,
-                    urgency: urgency
+                    purchase_intent: currentMetrics[userId].intent,
+                    price_sensitivity: currentMetrics[userId].sensitivity,
+                    urgency: currentMetrics[userId].urgency
                 })
             })
             .then(res => {
                 if (res.status === 409) {
-                    alert('해당 사용자는 이미 최종 구매를 완료했습니다! 시뮬레이션을 다시 시작하려면 DB를 리셋하세요.');
+                    alert('해당 세션 소비자는 이미 결제를 완료하여 시스템 데이터 수집이 잠금되었습니다.');
                     throw new Error('Session Closed');
                 }
                 if (!res.ok) return res.json().then(e => { throw new Error(e.error); });
                 return res.json();
             })
             .then(data => {
+                // 백엔드 가치 평가 변경액 갱신
                 currentPrices[userId] = data.new_price;
-                document.getElementById(`price-${userId}`).innerText = data.new_price.toLocaleString() + '원';
+
+                // 차트 업데이트 (이벤트 라벨 변환)
+                updateChart(userId, translateAction(action), data.new_price);
 
                 if (action === 'coupon') {
+                    // 쿠폰 혜택 클릭 시 비소비자 화면 정가를 동적으로 '쿠폰 적용가'로 갱신
+                    document.getElementById(`mall-price-${userId}`).innerText = data.new_price.toLocaleString() + '원';
+                    document.getElementById(`mall-price-title-${userId}`).innerText = '쿠폰 적용 혜택가';
+                    document.getElementById(`mall-price-title-${userId}`).className = 'mall-price-title coupon-active';
+                    document.getElementById(`mall-coupon-badge-${userId}`).style.display = 'inline-block';
                     showCouponFeedback(userId, data.reason);
                 }
 
                 if (data.session_closed) {
                     document.getElementById(`card-${userId}`).classList.add('closed');
+                    alert(`💳 [구매 승인] ${userId} 고객님이 결제를 마쳤습니다. 최종 가치: ${data.new_price.toLocaleString()}원`);
                 }
 
                 refreshLogs();
@@ -555,6 +1119,26 @@
             .catch(err => {
                 console.warn(err);
             });
+        }
+
+        function translateAction(action) {
+            const mapping = {
+                'view_review': '후기 보기',
+                'deep_review': '상세 후기',
+                'check_shipping': '도착일 확인',
+                'check_stock': '재고 확인',
+                'favorite': '찜하기',
+                'add_cart': '장바구니',
+                'remove_cart': '장바구니 제거',
+                'sort_low': '최저가 정렬',
+                'compare_brand': '브랜드 비교',
+                'dwell_4': '4초 체류',
+                'dwell_8': '8초 체류',
+                'dwell_15': '15초 체류',
+                'coupon': '쿠폰 적용',
+                'purchase_complete': '구매 완료'
+            };
+            return mapping[action] || action;
         }
 
         function showCouponFeedback(userId, reason) {
@@ -575,29 +1159,23 @@
                 box.style.color = '#b45309';
             }
             
-            box.innerHTML = `<strong>🎁 AI 쿠폰 발행 결과</strong><div style="margin-top: 4px; line-height: 1.4;">${reason}</div>`;
+            box.innerHTML = `<strong>🎁 AI 최적화 할인율 적용 결과</strong><div style="margin-top: 4px; line-height: 1.4;">${reason}</div>`;
         }
 
+        // 시뮬레이터 DB 리셋
         function resetSimulator() {
-            if (!confirm('정말 시뮬레이션 데이터를 모두 비우고 초기화하시겠습니까?')) return;
+            if (!confirm('시뮬레이션 DB 로그를 모두 비우고 초기화하시겠습니까?')) return;
             fetch('/api/reset', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
                 if (data.ok) {
-                    alert('시뮬레이터가 성공적으로 초기화되었습니다.');
-                    document.querySelectorAll('.user-card').forEach(card => {
-                        card.classList.remove('closed');
-                    });
-                    document.querySelectorAll('.coupon-box').forEach(box => {
-                        box.style.display = 'none';
-                    });
-                    const userIds = ['parent', 'smart', 'loyal'];
-                    userIds.forEach(id => changeProduct(id));
-                    refreshLogs();
+                    alert('시뮬레이터가 정상 초기화되었습니다.');
+                    location.reload();
                 }
             });
         }
 
+        // 실시간 어드민 데이터 로그 갱신
         function refreshLogs() {
             fetch('/api/events?limit=100')
             .then(res => res.json())
