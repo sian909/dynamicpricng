@@ -939,7 +939,7 @@
             const reviews = selectedOpt.getAttribute('data-reviews');
 
             // 가상몰 화면 상품 텍스트 갱신
-            document.getElementById(`mall-title-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = name;
+            document.getElementById(`mall-title-${userId}`).innerText = name;
             document.getElementById(`mall-rating-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = `⭐ ${rating} (${parseInt(reviews).toLocaleString()}개 후기)`;
             document.getElementById(`mall-stock-count-{{ user.id }}`.replace('{{ user.id }}', userId)).innerText = stock;
 
